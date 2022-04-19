@@ -1,4 +1,5 @@
 const { Router } = require("express");
+const multer = require("multer");
 const authenticate = require("./controllers/auth/authenticate");
 const createNews = require("./controllers/news/createNews");
 const deleteNews = require("./controllers/news/deleteNews");
@@ -9,6 +10,12 @@ const adminLogin = require("./controllers/adminAuth/login");
 const adminRegister = require("./controllers/adminAuth/register");
 
 const router = Router();
+const formData = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // keep images size < 10 MB
+  },
+});
 
 //initial route
 router.get("/", (req, res) => {
@@ -23,7 +30,12 @@ router.post("/admin/login", adminLogin);
 router.post("/admin/register", adminRegister);
 //news
 router.get("/news", authMiddleware, fetchNews);
-router.post("/news/createNews", adminAuthMiddleware, createNews);
+router.post(
+  "/news/createNews",
+  adminAuthMiddleware,
+  formData.single("image"),
+  createNews
+);
 router.post("/news/deleteNews", adminAuthMiddleware, deleteNews);
 
 module.exports = router;

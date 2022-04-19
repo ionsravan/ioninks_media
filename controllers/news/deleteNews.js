@@ -1,6 +1,8 @@
 const newsModel = require("../../models/news.model");
 const categoryModel = require("../../models/category.model");
 const Error = require("../../utils/Error");
+const { remove } = require("../../s3");
+
 const { startSession } = require("mongoose");
 
 const deleteNews = async (req, res, next) => {
@@ -13,14 +15,22 @@ const deleteNews = async (req, res, next) => {
 
     //starting transaction
     session.startTransaction();
-
     const newsArticle = await newsModel
       .findByIdAndDelete(newsId)
       .session(session)
-      .select("category")
+      .select("category imageUrl")
       .exec();
 
     if (!newsArticle) throw new Error("The article does not exist", 404);
+
+    if (newsArticle.imageUrl) {
+      const tempArray = newsArticle.imageUrl.split("/");
+      const s3Data = {
+        Bucket: process.env.AWS_BUCKET_NAME,
+        Key: `${tempArray[3]}/${tempArray[4]}`,
+      };
+      await remove(s3Data);
+    }
 
     const newsCategory = await categoryModel
       .findOne({ name: newsArticle.category })

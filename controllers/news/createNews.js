@@ -2,11 +2,29 @@ const newsModel = require("../../models/news.model");
 const categoryModel = require("../../models/category.model");
 const Error = require("../../utils/Error");
 const { startSession } = require("mongoose");
+const { upload } = require("../../s3");
+const uuid = require("uuid").v4;
 
 const createNews = async (req, res, next) => {
   const session = await startSession();
   try {
-    const { title, news, source, imageUrl, referenceUrl, category } = req.body;
+    const { title, news, source, referenceUrl, category } = req.body;
+    let imageUrl = null;
+
+    if (req.file) {
+      const filesNameSplit = req.file.originalname.split(".");
+      const fileName = filesNameSplit[0];
+      const extension = filesNameSplit[filesNameSplit.length - 1];
+
+      const s3Data = {
+        Bucket: process.env.AWS_BUCKET_NAME,
+        Key: `news/${fileName}_${uuid()}.${extension}`,
+        Body: req.file.buffer,
+      };
+
+      const response = await upload(s3Data);
+      imageUrl = response?.Location;
+    }
 
     if (!title || !news || !source || !category)
       throw new Error("Required fields missing", 400);
@@ -14,6 +32,7 @@ const createNews = async (req, res, next) => {
     const exestingCategory = await categoryModel.findOne({
       name: category.toLowerCase(),
     });
+
     //starting transaction
     session.startTransaction();
     const newsArticle = new newsModel({
