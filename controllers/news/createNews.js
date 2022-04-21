@@ -11,6 +11,9 @@ const createNews = async (req, res, next) => {
     const { title, news, source, referenceUrl, category } = req.body;
     let imageUrl = null;
 
+    if (!title || !news || !source || !category)
+      throw new Error("Required fields missing", 400);
+
     if (req.file) {
       const filesNameSplit = req.file.originalname.split(".");
       const fileName = filesNameSplit[0];
@@ -25,9 +28,6 @@ const createNews = async (req, res, next) => {
       const response = await upload(s3Data);
       imageUrl = response?.Location;
     }
-
-    if (!title || !news || !source || !category)
-      throw new Error("Required fields missing", 400);
 
     const exestingCategory = await categoryModel.findOne({
       name: category.toLowerCase(),

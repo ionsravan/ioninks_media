@@ -8,6 +8,8 @@ const authMiddleware = require("./middlewares/auth.md");
 const adminAuthMiddleware = require("./middlewares/admin.auth.md");
 const adminLogin = require("./controllers/adminAuth/login");
 const adminRegister = require("./controllers/adminAuth/register");
+const fetchCategory = require("./controllers/categories/fetchCategories");
+const { likeNews, dislikeNews } = require("./controllers/news/likeNews");
 
 const router = Router();
 const formData = multer({
@@ -30,6 +32,9 @@ router.post("/admin/login", adminLogin);
 router.post("/admin/register", adminRegister);
 //news
 router.get("/news", authMiddleware, fetchNews);
+router.post("/news/likeNews", authMiddleware, likeNews);
+router.post("/news/dislikeNews", authMiddleware, dislikeNews);
+
 router.post(
   "/news/createNews",
   adminAuthMiddleware,
@@ -37,5 +42,8 @@ router.post(
   createNews
 );
 router.post("/news/deleteNews", adminAuthMiddleware, deleteNews);
+
+//categories routes
+router.get("/category", authMiddleware, fetchCategory);
 
 module.exports = router;
