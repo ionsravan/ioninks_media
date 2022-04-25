@@ -10,12 +10,15 @@ const adminLogin = require("./controllers/adminAuth/login");
 const adminRegister = require("./controllers/adminAuth/register");
 const fetchCategory = require("./controllers/categories/fetchCategories");
 const { likeNews, dislikeNews } = require("./controllers/news/likeNews");
+const createStory = require("./controllers/stories/createStory");
+const fetchStory = require("./controllers/stories/fetchStory");
+const deleteStory = require("./controllers/stories/deleteStory");
 
 const router = Router();
 const formData = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, // keep images size < 10 MB
+    fileSize: 200 * 1024 * 1024, // keep file size < 200 MB
   },
 });
 
@@ -45,5 +48,19 @@ router.post("/news/deleteNews", adminAuthMiddleware, deleteNews);
 
 //categories routes
 router.get("/category", authMiddleware, fetchCategory);
+
+//stories routes
+router.get("/story", authMiddleware, fetchStory);
+const multipleUpload = formData.fields([
+  { name: "thumbnail" },
+  { name: "mediaFiles" },
+]);
+router.post(
+  "/story/createStory",
+  adminAuthMiddleware,
+  multipleUpload,
+  createStory
+);
+router.post("/story/deleteStory", adminAuthMiddleware, deleteStory);
 
 module.exports = router;
